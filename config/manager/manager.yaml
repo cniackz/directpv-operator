@@ -74,7 +74,7 @@ spec:
         name: manager
         env:
         - name: MEMCACHED_IMAGE
-          value: "memcached:1.4.36-alpine"
+          value: "ubuntu:latest"
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
