@@ -314,8 +314,8 @@ func (r *MemcachedReconciler) deploymentForMemcached(
 	if err != nil {
 		return nil, err
 	}
-
-	dep := &appsv1.Deployment{
+	hostPathTypeToBeUsed := corev1.HostPathDirectoryOrCreate
+	var dep = &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      memcached.Name,
 			Namespace: memcached.Namespace,
@@ -358,54 +358,57 @@ func (r *MemcachedReconciler) deploymentForMemcached(
 					//		},
 					//	},
 					//},
-					SecurityContext: &corev1.PodSecurityContext{
-						RunAsNonRoot: &[]bool{true}[0],
-						// IMPORTANT: seccomProfile was introduced with Kubernetes 1.19
-						// If you are looking for to produce solutions to be supported
-						// on lower versions you must remove this option.
-						SeccompProfile: &corev1.SeccompProfile{
-							Type: corev1.SeccompProfileTypeRuntimeDefault,
+					SecurityContext: &corev1.PodSecurityContext{},
+					Volumes: []corev1.Volume{
+						{
+							Name: "socket-dir",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/var/lib/kubelet/plugins/controller-controller",
+									Type: &hostPathTypeToBeUsed,
+								},
+							},
 						},
 					},
 					Containers: []corev1.Container{{
 						Image:           image,
 						Name:            "memcached",
 						ImagePullPolicy: corev1.PullIfNotPresent,
-						// Ensure restrictive context for the container
-						// More info: https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted
 						SecurityContext: &corev1.SecurityContext{
-							// WARNING: Ensure that the image used defines an UserID in the Dockerfile
-							// otherwise the Pod will not run and will fail with "container has runAsNonRoot and image has non-numeric user"".
-							// If you want your workloads admitted in namespaces enforced with the restricted mode in OpenShift/OKD vendors
-							// then, you MUST ensure that the Dockerfile defines a User ID OR you MUST leave the "RunAsNonRoot" and
-							// "RunAsUser" fields empty.
-							RunAsNonRoot: &[]bool{true}[0],
-							// The memcached image does not use a non-zero numeric user as the default user.
-							// Due to RunAsNonRoot field being set to true, we need to force the user in the
-							// container to a non-zero numeric user. We do this using the RunAsUser field.
-							// However, if you are looking to provide solution for K8s vendors like OpenShift
-							// be aware that you cannot run under its restricted-v2 SCC if you set this value.
-							RunAsUser:                &[]int64{1001}[0],
-							AllowPrivilegeEscalation: &[]bool{false}[0],
-							Capabilities: &corev1.Capabilities{
-								Drop: []corev1.Capability{
-									"ALL",
-								},
-							},
+							Privileged: &[]bool{true}[0],
 						},
 						Ports: []corev1.ContainerPort{{
 							ContainerPort: memcached.Spec.ContainerPort,
 							Name:          "memcached",
 						}},
-						Command: []string{"/bin/bash", "-c", "--"},
-						Args:    []string{"while true; do sleep 30; done;"},
+						//Command: []string{"/bin/bash", "-c", "--"},
+						Args: []string{"controller", "--identity=directpv-min-io", "-v=3", "--csi-endpoint=$(CSI_ENDPOINT)", "--kube-node-name=$(KUBE_NODE_NAME)", "--readiness-port=30443"},
+						Env: []corev1.EnvVar{
+							{
+								Name:  "CSI_ENDPOINT",
+								Value: "unix:///csi/csi.sock",
+							},
+							{
+								Name: "KUBE_NODE_NAME",
+								ValueFrom: &corev1.EnvVarSource{
+									FieldRef: &corev1.ObjectFieldSelector{
+										APIVersion: "v1",
+										FieldPath:  "spec.nodeName",
+									},
+								},
+							},
+						},
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								Name:      "socket-dir",
+								MountPath: "/csi",
+							},
+						},
 					}},
 				},
 			},
 		},
-	}
-
-	// Set the ownerRef for the Deployment
+	} // Set the ownerRef for the Deployment
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/owners-dependents/
 	if err := ctrl.SetControllerReference(memcached, dep, r.Scheme); err != nil {
 		return nil, err
