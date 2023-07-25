@@ -85,7 +85,7 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// Fetch the Memcached instance
 	// The purpose is check if the Custom Resource for the Kind Memcached
 	// is applied on the cluster if not we return nil to stop the reconciliation
-	memcached := &cachev1alpha1.Memcached{}
+	memcached := &cachev1alpha1.Deployer{}
 	err := r.Get(ctx, req.NamespacedName, memcached)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -284,7 +284,7 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 }
 
 // finalizeMemcached will perform the required operations before delete the CR.
-func (r *MemcachedReconciler) doFinalizerOperationsForMemcached(cr *cachev1alpha1.Memcached) {
+func (r *MemcachedReconciler) doFinalizerOperationsForMemcached(cr *cachev1alpha1.Deployer) {
 	// TODO(user): Add the cleanup steps that the operator
 	// needs to do before the CR can be deleted. Examples
 	// of finalizers include performing backups and deleting
@@ -305,7 +305,7 @@ func (r *MemcachedReconciler) doFinalizerOperationsForMemcached(cr *cachev1alpha
 
 // deploymentForMemcached returns a Memcached Deployment object
 func (r *MemcachedReconciler) deploymentForMemcached(
-	memcached *cachev1alpha1.Memcached) (*appsv1.Deployment, error) {
+	memcached *cachev1alpha1.Deployer) (*appsv1.Deployment, error) {
 	ls := labelsForMemcached(memcached.Name)
 	replicas := memcached.Spec.Size
 
@@ -448,7 +448,7 @@ func imageForMemcached() (string, error) {
 // desirable state on the cluster
 func (r *MemcachedReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&cachev1alpha1.Memcached{}).
+		For(&cachev1alpha1.Deployer{}).
 		Owns(&appsv1.Deployment{}).
 		Complete(r)
 }

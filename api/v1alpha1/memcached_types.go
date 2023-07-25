@@ -62,9 +62,9 @@ type MemcachedStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// Memcached is the Schema for the memcacheds API
+// Deployer is the Schema for the memcacheds API
 // +kubebuilder:subresource:status
-type Memcached struct {
+type Deployer struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
@@ -78,9 +78,9 @@ type Memcached struct {
 type MemcachedList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Memcached `json:"items"`
+	Items           []Deployer `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Memcached{}, &MemcachedList{})
+	SchemeBuilder.Register(&Deployer{}, &MemcachedList{})
 }
