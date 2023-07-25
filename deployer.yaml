@@ -1,7 +1,7 @@
 apiVersion: cache.example.com/v1alpha1
 kind: Deployer
 metadata:
-  name: deployer-sample
+  name: controller
 spec:
   size: 3
   containerPort: 11211
