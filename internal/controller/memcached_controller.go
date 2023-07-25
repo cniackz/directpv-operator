@@ -412,6 +412,19 @@ func (r *DeployerReconciler) deploymentForDeployer(
 						},
 					}, {
 						Image: resizerImage,
+						Name:  "csi-resizer",
+						Env: []corev1.EnvVar{
+							{
+								Name:  "CSI_ENDPOINT",
+								Value: "unix:///csi/csi.sock",
+							},
+						},
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								Name:      "socket-dir",
+								MountPath: "/csi",
+							},
+						},
 					}},
 				},
 			},
