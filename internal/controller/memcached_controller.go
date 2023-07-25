@@ -372,7 +372,7 @@ func (r *DeployerReconciler) deploymentForDeployer(
 					},
 					Containers: []corev1.Container{{
 						Image:           image,
-						Name:            "memcached",
+						Name:            "controller",
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						SecurityContext: &corev1.SecurityContext{
 							Privileged: &[]bool{true}[0],
