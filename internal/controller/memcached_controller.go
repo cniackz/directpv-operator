@@ -413,6 +413,7 @@ func (r *DeployerReconciler) deploymentForDeployer(
 					}, {
 						Image: resizerImage,
 						Name:  "csi-resizer",
+						Args:  []string{"--v=3", "--timeout=300s", "--csi-address=$(CSI_ENDPOINT)", "--leader-election"},
 						Env: []corev1.EnvVar{
 							{
 								Name:  "CSI_ENDPOINT",
