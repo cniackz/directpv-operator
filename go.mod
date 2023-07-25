@@ -1,4 +1,4 @@
-module github.com/example/memcached-operator
+module github.com/example/directpv-operator
 
 go 1.19
 
