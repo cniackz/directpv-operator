@@ -73,7 +73,7 @@ spec:
         image: controller:latest
         name: manager
         env:
-        - name: MEMCACHED_IMAGE
+        - name: DIRECTPV_IMAGE
           value: "quay.io/minio/directpv:v4.0.5"
         securityContext:
           allowPrivilegeEscalation: false

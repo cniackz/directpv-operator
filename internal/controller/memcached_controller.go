@@ -309,8 +309,8 @@ func (r *DeployerReconciler) deploymentForDeployer(
 	ls := labelsForMemcached(memcached.Name)
 	replicas := memcached.Spec.Size
 
-	// Get the Operand image
-	image, err := imageForMemcached()
+	// Get the images
+	controllerImage, err := imageForDeployer()
 	if err != nil {
 		return nil, err
 	}
@@ -371,7 +371,7 @@ func (r *DeployerReconciler) deploymentForDeployer(
 						},
 					},
 					Containers: []corev1.Container{{
-						Image:           image,
+						Image:           controllerImage,
 						Name:            "controller",
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						SecurityContext: &corev1.SecurityContext{
@@ -425,7 +425,7 @@ func (r *DeployerReconciler) deploymentForDeployer(
 // More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/
 func labelsForMemcached(name string) map[string]string {
 	var imageTag string
-	image, err := imageForMemcached()
+	image, err := imageForDeployer()
 	if err == nil {
 		imageTag = strings.Split(image, ":")[1]
 	}
@@ -438,9 +438,9 @@ func labelsForMemcached(name string) map[string]string {
 }
 
 // imageForMemcached gets the Operand image which is managed by this controller
-// from the MEMCACHED_IMAGE environment variable defined in the config/manager/manager.yaml
-func imageForMemcached() (string, error) {
-	var imageEnvVar = "MEMCACHED_IMAGE"
+// from the DIRECTPV_IMAGE environment variable defined in the config/manager/manager.yaml
+func imageForDeployer() (string, error) {
+	var imageEnvVar = "DIRECTPV_IMAGE"
 	image, found := os.LookupEnv(imageEnvVar)
 	if !found {
 		return "", fmt.Errorf("Unable to find %s environment variable with the image", imageEnvVar)
