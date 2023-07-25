@@ -427,7 +427,7 @@ func labelsForMemcached(name string) map[string]string {
 	return map[string]string{"app.kubernetes.io/name": "Memcached",
 		"app.kubernetes.io/instance":   name,
 		"app.kubernetes.io/version":    imageTag,
-		"app.kubernetes.io/part-of":    "memcached-operator",
+		"app.kubernetes.io/part-of":    "directpv-operator",
 		"app.kubernetes.io/created-by": "controller-manager",
 	}
 }
