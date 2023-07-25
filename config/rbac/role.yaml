@@ -20,7 +20,7 @@ rules:
 - apiGroups:
   - cache.example.com
   resources:
-  - memcacheds
+  - deployers
   verbs:
   - create
   - delete
@@ -32,13 +32,13 @@ rules:
 - apiGroups:
   - cache.example.com
   resources:
-  - memcacheds/finalizers
+  - deployers/finalizers
   verbs:
   - update
 - apiGroups:
   - cache.example.com
   resources:
-  - memcacheds/status
+  - deployers/status
   verbs:
   - get
   - patch

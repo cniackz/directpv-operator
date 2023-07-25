@@ -39,18 +39,18 @@ import (
 	cachev1alpha1 "github.com/example/memcached-operator/api/v1alpha1"
 )
 
-const memcachedFinalizer = "cache.example.com/finalizer"
+const deployerFinalizer = "cache.example.com/finalizer"
 
 // Definitions to manage status conditions
 const (
-	// typeAvailableMemcached represents the status of the Deployment reconciliation
-	typeAvailableMemcached = "Available"
-	// typeDegradedMemcached represents the status used when the custom resource is deleted and the finalizer operations are must to occur.
-	typeDegradedMemcached = "Degraded"
+	// typeAvailableDeployer represents the status of the Deployment reconciliation
+	typeAvailableDeployer = "Available"
+	// typeDegradedDeployer represents the status used when the custom resource is deleted and the finalizer operations are must to occur.
+	typeDegradedDeployer = "Degraded"
 )
 
-// MemcachedReconciler reconciles a Memcached object
-type MemcachedReconciler struct {
+// DeployerReconciler reconciles a Deployer object
+type DeployerReconciler struct {
 	client.Client
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
@@ -60,9 +60,9 @@ type MemcachedReconciler struct {
 // when the command <make manifests> is executed.
 // To know more about markers see: https://book.kubebuilder.io/reference/markers.html
 
-//+kubebuilder:rbac:groups=cache.example.com,resources=memcacheds,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=cache.example.com,resources=memcacheds/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=cache.example.com,resources=memcacheds/finalizers,verbs=update
+//+kubebuilder:rbac:groups=cache.example.com,resources=deployers,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=cache.example.com,resources=deployers/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=cache.example.com,resources=deployers/finalizers,verbs=update
 //+kubebuilder:rbac:groups=core,resources=events,verbs=create;patch
 //+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch
@@ -79,41 +79,41 @@ type MemcachedReconciler struct {
 // - About Operator Pattern: https://kubernetes.io/docs/concepts/extend-kubernetes/operator/
 // - About Controllers: https://kubernetes.io/docs/concepts/architecture/controller/
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.1/pkg/reconcile
-func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *DeployerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
-	// Fetch the Memcached instance
-	// The purpose is check if the Custom Resource for the Kind Memcached
+	// Fetch the Deployer instance
+	// The purpose is check if the Custom Resource for the Kind Deployer
 	// is applied on the cluster if not we return nil to stop the reconciliation
-	memcached := &cachev1alpha1.Deployer{}
-	err := r.Get(ctx, req.NamespacedName, memcached)
+	deployer := &cachev1alpha1.Deployer{}
+	err := r.Get(ctx, req.NamespacedName, deployer)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			// If the custom resource is not found then, it usually means that it was deleted or not created
 			// In this way, we will stop the reconciliation
-			log.Info("memcached resource not found. Ignoring since object must be deleted")
+			log.Info("deployer resource not found. Ignoring since object must be deleted")
 			return ctrl.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
-		log.Error(err, "Failed to get memcached")
+		log.Error(err, "Failed to get deployer")
 		return ctrl.Result{}, err
 	}
 
 	// Let's just set the status as Unknown when no status are available
-	if memcached.Status.Conditions == nil || len(memcached.Status.Conditions) == 0 {
-		meta.SetStatusCondition(&memcached.Status.Conditions, metav1.Condition{Type: typeAvailableMemcached, Status: metav1.ConditionUnknown, Reason: "Reconciling", Message: "Starting reconciliation"})
-		if err = r.Status().Update(ctx, memcached); err != nil {
-			log.Error(err, "Failed to update Memcached status")
+	if deployer.Status.Conditions == nil || len(deployer.Status.Conditions) == 0 {
+		meta.SetStatusCondition(&deployer.Status.Conditions, metav1.Condition{Type: typeAvailableDeployer, Status: metav1.ConditionUnknown, Reason: "Reconciling", Message: "Starting reconciliation"})
+		if err = r.Status().Update(ctx, deployer); err != nil {
+			log.Error(err, "Failed to update Deployer status")
 			return ctrl.Result{}, err
 		}
 
-		// Let's re-fetch the memcached Custom Resource after update the status
+		// Let's re-fetch the deployer Custom Resource after update the status
 		// so that we have the latest state of the resource on the cluster and we will avoid
 		// raise the issue "the object has been modified, please apply
 		// your changes to the latest version and try again" which would re-trigger the reconciliation
 		// if we try to update it again in the following operations
-		if err := r.Get(ctx, req.NamespacedName, memcached); err != nil {
-			log.Error(err, "Failed to re-fetch memcached")
+		if err := r.Get(ctx, req.NamespacedName, deployer); err != nil {
+			log.Error(err, "Failed to re-fetch deployer")
 			return ctrl.Result{}, err
 		}
 	}
@@ -121,14 +121,14 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// Let's add a finalizer. Then, we can define some operations which should
 	// occurs before the custom resource to be deleted.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers
-	if !controllerutil.ContainsFinalizer(memcached, memcachedFinalizer) {
-		log.Info("Adding Finalizer for Memcached")
-		if ok := controllerutil.AddFinalizer(memcached, memcachedFinalizer); !ok {
+	if !controllerutil.ContainsFinalizer(deployer, deployerFinalizer) {
+		log.Info("Adding Finalizer for Deployer")
+		if ok := controllerutil.AddFinalizer(deployer, deployerFinalizer); !ok {
 			log.Error(err, "Failed to add finalizer into the custom resource")
 			return ctrl.Result{Requeue: true}, nil
 		}
 
-		if err = r.Update(ctx, memcached); err != nil {
+		if err = r.Update(ctx, deployer); err != nil {
 			log.Error(err, "Failed to update custom resource to add finalizer")
 			return ctrl.Result{}, err
 		}
@@ -136,54 +136,54 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	// Check if the Memcached instance is marked to be deleted, which is
 	// indicated by the deletion timestamp being set.
-	isMemcachedMarkedToBeDeleted := memcached.GetDeletionTimestamp() != nil
+	isMemcachedMarkedToBeDeleted := deployer.GetDeletionTimestamp() != nil
 	if isMemcachedMarkedToBeDeleted {
-		if controllerutil.ContainsFinalizer(memcached, memcachedFinalizer) {
-			log.Info("Performing Finalizer Operations for Memcached before delete CR")
+		if controllerutil.ContainsFinalizer(deployer, deployerFinalizer) {
+			log.Info("Performing Finalizer Operations for Deployer before delete CR")
 
 			// Let's add here an status "Downgrade" to define that this resource begin its process to be terminated.
-			meta.SetStatusCondition(&memcached.Status.Conditions, metav1.Condition{Type: typeDegradedMemcached,
+			meta.SetStatusCondition(&deployer.Status.Conditions, metav1.Condition{Type: typeDegradedDeployer,
 				Status: metav1.ConditionUnknown, Reason: "Finalizing",
-				Message: fmt.Sprintf("Performing finalizer operations for the custom resource: %s ", memcached.Name)})
+				Message: fmt.Sprintf("Performing finalizer operations for the custom resource: %s ", deployer.Name)})
 
-			if err := r.Status().Update(ctx, memcached); err != nil {
+			if err := r.Status().Update(ctx, deployer); err != nil {
 				log.Error(err, "Failed to update Memcached status")
 				return ctrl.Result{}, err
 			}
 
 			// Perform all operations required before remove the finalizer and allow
 			// the Kubernetes API to remove the custom resource.
-			r.doFinalizerOperationsForMemcached(memcached)
+			r.doFinalizerOperationsForDeployer(deployer)
 
-			// TODO(user): If you add operations to the doFinalizerOperationsForMemcached method
+			// TODO(user): If you add operations to the doFinalizerOperationsForDeployer method
 			// then you need to ensure that all worked fine before deleting and updating the Downgrade status
 			// otherwise, you should requeue here.
 
-			// Re-fetch the memcached Custom Resource before update the status
+			// Re-fetch the deployer Custom Resource before update the status
 			// so that we have the latest state of the resource on the cluster and we will avoid
 			// raise the issue "the object has been modified, please apply
 			// your changes to the latest version and try again" which would re-trigger the reconciliation
-			if err := r.Get(ctx, req.NamespacedName, memcached); err != nil {
+			if err := r.Get(ctx, req.NamespacedName, deployer); err != nil {
 				log.Error(err, "Failed to re-fetch memcached")
 				return ctrl.Result{}, err
 			}
 
-			meta.SetStatusCondition(&memcached.Status.Conditions, metav1.Condition{Type: typeDegradedMemcached,
+			meta.SetStatusCondition(&deployer.Status.Conditions, metav1.Condition{Type: typeDegradedDeployer,
 				Status: metav1.ConditionTrue, Reason: "Finalizing",
-				Message: fmt.Sprintf("Finalizer operations for custom resource %s name were successfully accomplished", memcached.Name)})
+				Message: fmt.Sprintf("Finalizer operations for custom resource %s name were successfully accomplished", deployer.Name)})
 
-			if err := r.Status().Update(ctx, memcached); err != nil {
+			if err := r.Status().Update(ctx, deployer); err != nil {
 				log.Error(err, "Failed to update Memcached status")
 				return ctrl.Result{}, err
 			}
 
 			log.Info("Removing Finalizer for Memcached after successfully perform the operations")
-			if ok := controllerutil.RemoveFinalizer(memcached, memcachedFinalizer); !ok {
+			if ok := controllerutil.RemoveFinalizer(deployer, deployerFinalizer); !ok {
 				log.Error(err, "Failed to remove finalizer for Memcached")
 				return ctrl.Result{Requeue: true}, nil
 			}
 
-			if err := r.Update(ctx, memcached); err != nil {
+			if err := r.Update(ctx, deployer); err != nil {
 				log.Error(err, "Failed to remove finalizer for Memcached")
 				return ctrl.Result{}, err
 			}
@@ -193,19 +193,19 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	// Check if the deployment already exists, if not create a new one
 	found := &appsv1.Deployment{}
-	err = r.Get(ctx, types.NamespacedName{Name: memcached.Name, Namespace: memcached.Namespace}, found)
+	err = r.Get(ctx, types.NamespacedName{Name: deployer.Name, Namespace: deployer.Namespace}, found)
 	if err != nil && apierrors.IsNotFound(err) {
 		// Define a new deployment
-		dep, err := r.deploymentForMemcached(memcached)
+		dep, err := r.deploymentForDeployer(deployer)
 		if err != nil {
 			log.Error(err, "Failed to define new Deployment resource for Memcached")
 
 			// The following implementation will update the status
-			meta.SetStatusCondition(&memcached.Status.Conditions, metav1.Condition{Type: typeAvailableMemcached,
+			meta.SetStatusCondition(&deployer.Status.Conditions, metav1.Condition{Type: typeAvailableDeployer,
 				Status: metav1.ConditionFalse, Reason: "Reconciling",
-				Message: fmt.Sprintf("Failed to create Deployment for the custom resource (%s): (%s)", memcached.Name, err)})
+				Message: fmt.Sprintf("Failed to create Deployment for the custom resource (%s): (%s)", deployer.Name, err)})
 
-			if err := r.Status().Update(ctx, memcached); err != nil {
+			if err := r.Status().Update(ctx, deployer); err != nil {
 				log.Error(err, "Failed to update Memcached status")
 				return ctrl.Result{}, err
 			}
@@ -235,7 +235,7 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// to set the quantity of Deployment instances is the desired state on the cluster.
 	// Therefore, the following code will ensure the Deployment size is the same as defined
 	// via the Size spec of the Custom Resource which we are reconciling.
-	size := memcached.Spec.Size
+	size := deployer.Spec.Size
 	if *found.Spec.Replicas != size {
 		found.Spec.Replicas = &size
 		if err = r.Update(ctx, found); err != nil {
@@ -246,17 +246,17 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			// so that we have the latest state of the resource on the cluster and we will avoid
 			// raise the issue "the object has been modified, please apply
 			// your changes to the latest version and try again" which would re-trigger the reconciliation
-			if err := r.Get(ctx, req.NamespacedName, memcached); err != nil {
+			if err := r.Get(ctx, req.NamespacedName, deployer); err != nil {
 				log.Error(err, "Failed to re-fetch memcached")
 				return ctrl.Result{}, err
 			}
 
 			// The following implementation will update the status
-			meta.SetStatusCondition(&memcached.Status.Conditions, metav1.Condition{Type: typeAvailableMemcached,
+			meta.SetStatusCondition(&deployer.Status.Conditions, metav1.Condition{Type: typeAvailableDeployer,
 				Status: metav1.ConditionFalse, Reason: "Resizing",
-				Message: fmt.Sprintf("Failed to update the size for the custom resource (%s): (%s)", memcached.Name, err)})
+				Message: fmt.Sprintf("Failed to update the size for the custom resource (%s): (%s)", deployer.Name, err)})
 
-			if err := r.Status().Update(ctx, memcached); err != nil {
+			if err := r.Status().Update(ctx, deployer); err != nil {
 				log.Error(err, "Failed to update Memcached status")
 				return ctrl.Result{}, err
 			}
@@ -271,11 +271,11 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	// The following implementation will update the status
-	meta.SetStatusCondition(&memcached.Status.Conditions, metav1.Condition{Type: typeAvailableMemcached,
+	meta.SetStatusCondition(&deployer.Status.Conditions, metav1.Condition{Type: typeAvailableDeployer,
 		Status: metav1.ConditionTrue, Reason: "Reconciling",
-		Message: fmt.Sprintf("Deployment for custom resource (%s) with %d replicas created successfully", memcached.Name, size)})
+		Message: fmt.Sprintf("Deployment for custom resource (%s) with %d replicas created successfully", deployer.Name, size)})
 
-	if err := r.Status().Update(ctx, memcached); err != nil {
+	if err := r.Status().Update(ctx, deployer); err != nil {
 		log.Error(err, "Failed to update Memcached status")
 		return ctrl.Result{}, err
 	}
@@ -284,7 +284,7 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 }
 
 // finalizeMemcached will perform the required operations before delete the CR.
-func (r *MemcachedReconciler) doFinalizerOperationsForMemcached(cr *cachev1alpha1.Deployer) {
+func (r *DeployerReconciler) doFinalizerOperationsForDeployer(cr *cachev1alpha1.Deployer) {
 	// TODO(user): Add the cleanup steps that the operator
 	// needs to do before the CR can be deleted. Examples
 	// of finalizers include performing backups and deleting
@@ -303,8 +303,8 @@ func (r *MemcachedReconciler) doFinalizerOperationsForMemcached(cr *cachev1alpha
 			cr.Namespace))
 }
 
-// deploymentForMemcached returns a Memcached Deployment object
-func (r *MemcachedReconciler) deploymentForMemcached(
+// deploymentForDeployer returns a Memcached Deployment object
+func (r *DeployerReconciler) deploymentForDeployer(
 	memcached *cachev1alpha1.Deployer) (*appsv1.Deployment, error) {
 	ls := labelsForMemcached(memcached.Name)
 	replicas := memcached.Spec.Size
@@ -446,7 +446,7 @@ func imageForMemcached() (string, error) {
 // SetupWithManager sets up the controller with the Manager.
 // Note that the Deployment will be also watched in order to ensure its
 // desirable state on the cluster
-func (r *MemcachedReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *DeployerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cachev1alpha1.Deployer{}).
 		Owns(&appsv1.Deployment{}).
