@@ -75,6 +75,10 @@ spec:
         env:
         - name: DIRECTPV_IMAGE
           value: "quay.io/minio/directpv:v4.0.5"
+        - name: CSI_RESIZER
+          value: "quay.io/minio/csi-resizer:v1.7.0"
+        - name: CSI_PROVISIONER
+          value: "quay.io/minio/csi-provisioner:v3.4.0"
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

@@ -311,6 +311,7 @@ func (r *DeployerReconciler) deploymentForDeployer(
 
 	// Get the images
 	controllerImage, err := imageForDeployer()
+	resizerImage, err := imageForResizer()
 	if err != nil {
 		return nil, err
 	}
@@ -409,6 +410,8 @@ func (r *DeployerReconciler) deploymentForDeployer(
 								MountPath: "/csi",
 							},
 						},
+					}, {
+						Image: resizerImage,
 					}},
 				},
 			},
@@ -444,6 +447,16 @@ func imageForDeployer() (string, error) {
 	image, found := os.LookupEnv(imageEnvVar)
 	if !found {
 		return "", fmt.Errorf("Unable to find %s environment variable with the image", imageEnvVar)
+	}
+	return image, nil
+}
+
+// imageForResizer gets the resizer image
+func imageForResizer() (string, error) {
+	var imageEnvVar = "CSI_RESIZER"
+	image, found := os.LookupEnv(imageEnvVar)
+	if !found {
+		return "", fmt.Errorf("Unable to find #{imageEnvVar} environment variable with the image")
 	}
 	return image, nil
 }
