@@ -23,8 +23,8 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// MemcachedSpec defines the desired state of Memcached
-type MemcachedSpec struct {
+// DeployerSpec defines the desired state of Deployer
+type DeployerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
@@ -34,7 +34,7 @@ type MemcachedSpec struct {
 	// +kubebuilder:validation:Maximum=5
 	// +kubebuilder:validation:ExclusiveMaximum=false
 
-	// Size defines the number of Memcached instances
+	// Size defines the number of Deployer instances
 	// +operator-sdk:csv:customresourcedefinitions:type=spec
 	Size int32 `json:"size,omitempty"`
 
@@ -43,18 +43,18 @@ type MemcachedSpec struct {
 	ContainerPort int32 `json:"containerPort,omitempty"`
 }
 
-// MemcachedStatus defines the observed state of Memcached
-type MemcachedStatus struct {
-	// Represents the observations of a Memcached's current state.
-	// Memcached.status.conditions.type are: "Available", "Progressing", and "Degraded"
-	// Memcached.status.conditions.status are one of True, False, Unknown.
-	// Memcached.status.conditions.reason the value should be a CamelCase string and producers of specific
+// DeployerStatus defines the observed state of Deployer
+type DeployerStatus struct {
+	// Represents the observations of a Deployer's current state.
+	// Deployer.status.conditions.type are: "Available", "Progressing", and "Degraded"
+	// Deployer.status.conditions.status are one of True, False, Unknown.
+	// Deployer.status.conditions.reason the value should be a CamelCase string and producers of specific
 	// condition types may define expected values and meanings for this field, and whether the values
 	// are considered a guaranteed API.
-	// Memcached.status.conditions.Message is a human readable message indicating details about the transition.
+	// Deployer.status.conditions.Message is a human readable message indicating details about the transition.
 	// For further information see: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
 
-	// Conditions store the status conditions of the Memcached instances
+	// Conditions store the status conditions of the Deployer instances
 	// +operator-sdk:csv:customresourcedefinitions:type=status
 	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
 }
@@ -62,25 +62,25 @@ type MemcachedStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// Deployer is the Schema for the memcacheds API
+// Deployer is the Schema for the deployer's API
 // +kubebuilder:subresource:status
 type Deployer struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   MemcachedSpec   `json:"spec,omitempty"`
-	Status MemcachedStatus `json:"status,omitempty"`
+	Spec   DeployerSpec   `json:"spec,omitempty"`
+	Status DeployerStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// MemcachedList contains a list of Memcached
-type MemcachedList struct {
+// DeployerList contains a list of Deployer
+type DeployerList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Deployer `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Deployer{}, &MemcachedList{})
+	SchemeBuilder.Register(&Deployer{}, &DeployerList{})
 }

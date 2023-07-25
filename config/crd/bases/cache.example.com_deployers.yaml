@@ -18,7 +18,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Deployer is the Schema for the memcacheds API
+        description: Deployer is the Schema for the deployer's API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -33,7 +33,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: MemcachedSpec defines the desired state of Memcached
+            description: DeployerSpec defines the desired state of Deployer
             properties:
               containerPort:
                 description: Port defines the port that will be used to init the container
@@ -41,17 +41,17 @@ spec:
                 format: int32
                 type: integer
               size:
-                description: Size defines the number of Memcached instances
+                description: Size defines the number of Deployer instances
                 format: int32
                 maximum: 5
                 minimum: 1
                 type: integer
             type: object
           status:
-            description: MemcachedStatus defines the observed state of Memcached
+            description: DeployerStatus defines the observed state of Deployer
             properties:
               conditions:
-                description: Conditions store the status conditions of the Memcached
+                description: Conditions store the status conditions of the Deployer
                   instances
                 items:
                   description: "Condition contains details for one aspect of the current
