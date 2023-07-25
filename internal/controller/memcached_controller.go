@@ -312,6 +312,7 @@ func (r *DeployerReconciler) deploymentForDeployer(
 	// Get the images
 	controllerImage, err := imageForDeployer()
 	resizerImage, err := imageForResizer()
+	provisionerImage, err := imageForProvisioner()
 	if err != nil {
 		return nil, err
 	}
@@ -426,6 +427,29 @@ func (r *DeployerReconciler) deploymentForDeployer(
 								MountPath: "/csi",
 							},
 						},
+					}, {
+						Image: provisionerImage,
+						Name:  "csi-provisioner",
+						Args: []string{
+							"--v=3",
+							"--timeout=300s",
+							"--csi-address=$(CSI_ENDPOINT)",
+							"--leader-election",
+							"--feature-gates=Topology=true",
+							"--strict-topology",
+						},
+						Env: []corev1.EnvVar{
+							{
+								Name:  "CSI_ENDPOINT",
+								Value: "unix:///csi/csi.sock",
+							},
+						},
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								Name:      "socket-dir",
+								MountPath: "/csi",
+							},
+						},
 					}},
 				},
 			},
@@ -468,6 +492,16 @@ func imageForDeployer() (string, error) {
 // imageForResizer gets the resizer image
 func imageForResizer() (string, error) {
 	var imageEnvVar = "CSI_RESIZER"
+	image, found := os.LookupEnv(imageEnvVar)
+	if !found {
+		return "", fmt.Errorf("Unable to find #{imageEnvVar} environment variable with the image")
+	}
+	return image, nil
+}
+
+// imageForProvisioner gets the provisioner image
+func imageForProvisioner() (string, error) {
+	var imageEnvVar = "CSI_PROVISIONER"
 	image, found := os.LookupEnv(imageEnvVar)
 	if !found {
 		return "", fmt.Errorf("Unable to find #{imageEnvVar} environment variable with the image")
