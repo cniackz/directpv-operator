@@ -378,9 +378,14 @@ func (r *DeployerReconciler) deploymentForDeployer(
 							Privileged: &[]bool{true}[0],
 						},
 						Ports: []corev1.ContainerPort{{
-							ContainerPort: memcached.Spec.ContainerPort,
-							Name:          "memcached",
-						}},
+							ContainerPort: 30443,
+							Name:          "readinessport",
+						},
+							{
+								ContainerPort: 9898,
+								Name:          "healthz",
+							},
+						},
 						//Command: []string{"/bin/bash", "-c", "--"},
 						Args: []string{"controller", "--identity=directpv-min-io", "-v=3", "--csi-endpoint=$(CSI_ENDPOINT)", "--kube-node-name=$(KUBE_NODE_NAME)", "--readiness-port=30443"},
 						Env: []corev1.EnvVar{
