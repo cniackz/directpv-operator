@@ -495,10 +495,6 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 									Name:      "socket-dir",
 									MountPath: "/csi",
 								},
-								{
-									Name:      "registration-dir",
-									MountPath: "/registration",
-								},
 							},
 						},
 						{
@@ -544,6 +540,10 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 								{
 									Name:      "socket-dir",
 									MountPath: "/csi",
+								},
+								{
+									Name:      "registration-dir",
+									MountPath: "/registration",
 								},
 							},
 						},
