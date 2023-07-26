@@ -79,6 +79,10 @@ spec:
           value: "quay.io/minio/csi-resizer:v1.7.0"
         - name: CSI_PROVISIONER
           value: "quay.io/minio/csi-provisioner:v3.4.0"
+        - name: CSI_NODE_DRIVER_REGISTRAR
+          value: "quay.io/minio/csi-node-driver-registrar:v2.6.3"
+        - name: LIVENESS_PROBE
+          value: "quay.io/minio/livenessprobe:v2.9.0"
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

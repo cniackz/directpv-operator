@@ -347,6 +347,10 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 	if err != nil {
 		return nil, err
 	}
+	registrarImage, err := imageForRegistrar()
+	if err != nil {
+		return nil, err
+	}
 	hostPathTypeToBeUsed := corev1.HostPathDirectoryOrCreate
 	var daemonset = &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -378,6 +382,52 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 						{
 							Image:           controllerImage,
 							Name:            "controller",
+							ImagePullPolicy: corev1.PullIfNotPresent,
+							SecurityContext: &corev1.SecurityContext{
+								Privileged: &[]bool{true}[0],
+							},
+							Ports: []corev1.ContainerPort{{
+								ContainerPort: 30443,
+								Name:          "readinessport",
+							},
+								{
+									ContainerPort: 9898,
+									Name:          "healthz",
+								},
+							},
+							Args: []string{
+								"controller",
+								"--identity=directpv-min-io",
+								"-v=3",
+								"--csi-endpoint=$(CSI_ENDPOINT)",
+								"--kube-node-name=$(KUBE_NODE_NAME)",
+								"--readiness-port=30443",
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "CSI_ENDPOINT",
+									Value: "unix:///csi/csi.sock",
+								},
+								{
+									Name: "KUBE_NODE_NAME",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											APIVersion: "v1",
+											FieldPath:  "spec.nodeName",
+										},
+									},
+								},
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "socket-dir",
+									MountPath: "/csi",
+								},
+							},
+						},
+						{
+							Image:           registrarImage,
+							Name:            "node-driver-registrar",
 							ImagePullPolicy: corev1.PullIfNotPresent,
 							SecurityContext: &corev1.SecurityContext{
 								Privileged: &[]bool{true}[0],
@@ -637,6 +687,16 @@ func imageForResizer() (string, error) {
 // imageForProvisioner gets the provisioner image
 func imageForProvisioner() (string, error) {
 	var imageEnvVar = "CSI_PROVISIONER"
+	image, found := os.LookupEnv(imageEnvVar)
+	if !found {
+		return "", fmt.Errorf("Unable to find #{imageEnvVar} environment variable with the image")
+	}
+	return image, nil
+}
+
+// imageForRegistrar gets the provisioner image
+func imageForRegistrar() (string, error) {
+	var imageEnvVar = "CSI_NODE_DRIVER_REGISTRAR"
 	image, found := os.LookupEnv(imageEnvVar)
 	if !found {
 		return "", fmt.Errorf("Unable to find #{imageEnvVar} environment variable with the image")
