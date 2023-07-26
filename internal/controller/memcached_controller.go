@@ -347,6 +347,7 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 	if err != nil {
 		return nil, err
 	}
+	hostPathTypeToBeUsed := corev1.HostPathDirectoryOrCreate
 	var daemonset = &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "node-server",
@@ -362,6 +363,17 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 				},
 				Spec: corev1.PodSpec{
 					SecurityContext: &corev1.PodSecurityContext{},
+					Volumes: []corev1.Volume{
+						{
+							Name: "socket-dir",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/var/lib/kubelet/plugins/controller-controller",
+									Type: &hostPathTypeToBeUsed,
+								},
+							},
+						},
+					},
 					Containers: []corev1.Container{
 						{
 							Image:           controllerImage,
