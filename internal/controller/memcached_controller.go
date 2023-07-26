@@ -353,6 +353,7 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 		return nil, err
 	}
 	hostPathTypeToBeUsed := corev1.HostPathDirectoryOrCreate
+	healthZContainerPortName := "healthz"
 	var daemonset = &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "node-server",
@@ -476,10 +477,8 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 							LivenessProbe: &corev1.Probe{
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
-										Path: "/healthz",
-										Port: intstr.IntOrString{
-											StrVal: "healthz",
-										},
+										Path:   "/healthz",
+										Port:   intstr.FromString(healthZContainerPortName),
 										Scheme: "HTTP",
 									},
 								},
