@@ -94,3 +94,27 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - directpv.min.io
+  resources:
+  - directpvdrives
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - directpv.min.io
+  resources:
+  - directpvvolumes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
