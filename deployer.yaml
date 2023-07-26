@@ -2,6 +2,7 @@ apiVersion: cache.example.com/v1alpha1
 kind: Deployer
 metadata:
   name: controller
+  namespace: directpv
 spec:
   size: 3
   containerPort: 11211
