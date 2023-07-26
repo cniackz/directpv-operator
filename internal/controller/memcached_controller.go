@@ -342,7 +342,12 @@ func (r *DeployerReconciler) doFinalizerOperationsForDeployer(cr *cachev1alpha1.
 // daemonSetForDeployer returns a Deployer DaemonSet Object.
 func (r *DeployerReconciler) daemonSetForDeployer(
 	memcached *cachev1alpha1.Deployer) (*appsv1.DaemonSet, error) {
-	var daemonset = &appsv1.DaemonSet{}
+	var daemonset = &appsv1.DaemonSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "node-server",
+			Namespace: memcached.Namespace,
+		},
+	}
 	if err := ctrl.SetControllerReference(memcached, daemonset, r.Scheme); err != nil {
 		return nil, err
 	}
