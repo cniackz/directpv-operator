@@ -191,9 +191,44 @@ func (r *DeployerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, nil
 	}
 
+	// Check if the daemonset already exists, if not create a new one
+	foundDaemonSet := &appsv1.DaemonSet{}
+	err = r.Get(ctx, types.NamespacedName{Name: deployer.Name, Namespace: deployer.Namespace}, foundDaemonSet)
+	if err != nil && apierrors.IsNotFound(err) {
+		// Define a new DaemonSet
+		daemonSet, err := r.daemonSetForDeployer(deployer)
+		if err != nil {
+			log.Error(err, "Failed to define new DaemonSet resource for Deployer")
+
+			// The following implementation will update the status
+			meta.SetStatusCondition(&deployer.Status.Conditions, metav1.Condition{Type: typeAvailableDeployer,
+				Status: metav1.ConditionFalse, Reason: "Reconciling",
+				Message: fmt.Sprintf("Failed to create DaemonSet for the custom resource (%s): (%s)", deployer.Name, err)})
+
+			if err := r.Status().Update(ctx, deployer); err != nil {
+				log.Error(err, "Failed to update Deployer status")
+				return ctrl.Result{}, err
+			}
+
+			return ctrl.Result{}, err
+		}
+		log.Info("Creating a new DaemonSet...",
+			"DaemonSet.Namespace", daemonSet.Namespace, "DaemonSet.Name", daemonSet.Name)
+		if err = r.Create(ctx, daemonSet); err != nil {
+			log.Error(err, "Failed to create new DaemonSet",
+				"DaemonSet.Namespace", daemonSet.Namespace, "DaemonSet.Name", daemonSet.Name)
+			return ctrl.Result{}, err
+		}
+		// DaemonSet created successfully
+	} else if err != nil {
+		log.Error(err, "Failed to get DaemonSet")
+		// Let's return the error for the reconciliation be re-trigged again
+		return ctrl.Result{}, err
+	}
+
 	// Check if the deployment already exists, if not create a new one
-	found := &appsv1.Deployment{}
-	err = r.Get(ctx, types.NamespacedName{Name: deployer.Name, Namespace: deployer.Namespace}, found)
+	foundDeployment := &appsv1.Deployment{}
+	err = r.Get(ctx, types.NamespacedName{Name: deployer.Name, Namespace: deployer.Namespace}, foundDeployment)
 	if err != nil && apierrors.IsNotFound(err) {
 		// Define a new deployment
 		dep, err := r.deploymentForDeployer(deployer)
@@ -236,11 +271,11 @@ func (r *DeployerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	// Therefore, the following code will ensure the Deployment size is the same as defined
 	// via the Size spec of the Custom Resource which we are reconciling.
 	size := deployer.Spec.Size
-	if *found.Spec.Replicas != size {
-		found.Spec.Replicas = &size
-		if err = r.Update(ctx, found); err != nil {
+	if *foundDeployment.Spec.Replicas != size {
+		foundDeployment.Spec.Replicas = &size
+		if err = r.Update(ctx, foundDeployment); err != nil {
 			log.Error(err, "Failed to update Deployment",
-				"Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
+				"Deployment.Namespace", foundDeployment.Namespace, "Deployment.Name", foundDeployment.Name)
 
 			// Re-fetch the memcached Custom Resource before update the status
 			// so that we have the latest state of the resource on the cluster and we will avoid
@@ -303,7 +338,17 @@ func (r *DeployerReconciler) doFinalizerOperationsForDeployer(cr *cachev1alpha1.
 			cr.Namespace))
 }
 
-// deploymentForDeployer returns a Memcached Deployment object
+// daemonSetForDeployer returns a Deployer DaemonSet Object.
+func (r *DeployerReconciler) daemonSetForDeployer(
+	memcached *cachev1alpha1.Deployer) (*appsv1.DaemonSet, error) {
+	var daemonset = &appsv1.DaemonSet{}
+	if err := ctrl.SetControllerReference(memcached, daemonset, r.Scheme); err != nil {
+		return nil, err
+	}
+	return daemonset, nil
+}
+
+// deploymentForDeployer returns a Deployer Deployment object
 func (r *DeployerReconciler) deploymentForDeployer(
 	memcached *cachev1alpha1.Deployer) (*appsv1.Deployment, error) {
 	ls := labelsForMemcached(memcached.Name)
