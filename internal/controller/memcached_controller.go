@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"os"
 	"strings"
 	"time"
@@ -472,13 +473,29 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 									Name:          "metrics",
 								},
 							},
+							LivenessProbe: &corev1.Probe{
+								ProbeHandler: corev1.ProbeHandler{
+									HTTPGet: &corev1.HTTPGetAction{
+										Path: "/healthz",
+										Port: intstr.IntOrString{
+											StrVal: "healthz",
+										},
+										Scheme: "HTTP",
+									},
+								},
+								InitialDelaySeconds: 60,
+								TimeoutSeconds:      10,
+								PeriodSeconds:       10,
+								SuccessThreshold:    1,
+								FailureThreshold:    5,
+							},
 							Args: []string{
-								"controller",
-								"--identity=directpv-min-io",
+								"node-server",
 								"-v=3",
-								"--csi-endpoint=$(CSI_ENDPOINT)",
+								"--identity=directpv-min-io --csi-endpoint=$(CSI_ENDPOINT)",
 								"--kube-node-name=$(KUBE_NODE_NAME)",
 								"--readiness-port=30443",
+								"--metrics-port=10443",
 							},
 							Env: []corev1.EnvVar{
 								{
