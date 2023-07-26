@@ -372,7 +372,88 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 							Name: "socket-dir",
 							VolumeSource: corev1.VolumeSource{
 								HostPath: &corev1.HostPathVolumeSource{
-									Path: "/var/lib/kubelet/plugins/controller-controller",
+									Path: "/var/lib/kubelet/plugins/directpv-min-io",
+									Type: &hostPathTypeToBeUsed,
+								},
+							},
+						},
+						{
+							Name: "mountpoint-dir",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/var/lib/kubelet/pods",
+									Type: &hostPathTypeToBeUsed,
+								},
+							},
+						},
+						{
+							Name: "registration-dir",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/var/lib/kubelet/plugins_registry",
+									Type: &hostPathTypeToBeUsed,
+								},
+							},
+						},
+						{
+							Name: "plugins-dir",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/var/lib/kubelet/plugins",
+									Type: &hostPathTypeToBeUsed,
+								},
+							},
+						},
+						{
+							Name: "directpv-common-root",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/var/lib/directpv/",
+									Type: &hostPathTypeToBeUsed,
+								},
+							},
+						},
+						{
+							Name: "sysfs",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/sys",
+									Type: &hostPathTypeToBeUsed,
+								},
+							},
+						},
+						{
+							Name: "devfs",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/dev",
+									Type: &hostPathTypeToBeUsed,
+								},
+							},
+						},
+						{
+							Name: "run-udev-data-dir",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/run/udev/data",
+									Type: &hostPathTypeToBeUsed,
+								},
+							},
+						},
+						{
+							Name: "direct-csi-common-root",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/var/lib/direct-csi/",
+									Type: &hostPathTypeToBeUsed,
+								},
+							},
+						},
+						{
+							Name: "direct-csi-common-root",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/var/lib/direct-csi/",
 									Type: &hostPathTypeToBeUsed,
 								},
 							},
@@ -422,6 +503,10 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 								{
 									Name:      "socket-dir",
 									MountPath: "/csi",
+								},
+								{
+									Name:      "registration-dir",
+									MountPath: "/registration",
 								},
 							},
 						},
