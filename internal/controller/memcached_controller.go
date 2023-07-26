@@ -514,12 +514,9 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 								},
 							},
 							Args: []string{
-								"controller",
-								"--identity=directpv-min-io",
-								"-v=3",
-								"--csi-endpoint=$(CSI_ENDPOINT)",
-								"--kube-node-name=$(KUBE_NODE_NAME)",
-								"--readiness-port=30443",
+								"--v=3",
+								"--csi-address=unix:///csi/csi.sock",
+								"--kubelet-registration-path=/var/lib/kubelet/plugins/directpv-min-io/csi.sock",
 							},
 							Env: []corev1.EnvVar{
 								{
