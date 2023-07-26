@@ -449,15 +449,6 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 								},
 							},
 						},
-						{
-							Name: "direct-csi-common-root",
-							VolumeSource: corev1.VolumeSource{
-								HostPath: &corev1.HostPathVolumeSource{
-									Path: "/var/lib/direct-csi/",
-									Type: &hostPathTypeToBeUsed,
-								},
-							},
-						},
 					},
 					Containers: []corev1.Container{
 						{
