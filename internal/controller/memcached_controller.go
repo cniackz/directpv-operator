@@ -458,13 +458,18 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 							SecurityContext: &corev1.SecurityContext{
 								Privileged: &[]bool{true}[0],
 							},
-							Ports: []corev1.ContainerPort{{
-								ContainerPort: 30443,
-								Name:          "readinessport",
-							},
+							Ports: []corev1.ContainerPort{
+								{
+									ContainerPort: 30443,
+									Name:          "readinessport",
+								},
 								{
 									ContainerPort: 9898,
 									Name:          "healthz",
+								},
+								{
+									ContainerPort: 10443,
+									Name:          "metrics",
 								},
 							},
 							Args: []string{
@@ -494,6 +499,34 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 								{
 									Name:      "socket-dir",
 									MountPath: "/csi",
+								},
+								{
+									Name:      "mountpoint-dir",
+									MountPath: "/var/lib/kubelet/pods",
+								},
+								{
+									Name:      "plugins-dir",
+									MountPath: "/var/lib/kubelet/plugins",
+								},
+								{
+									Name:      "directpv-common-root",
+									MountPath: "/var/lib/directpv/",
+								},
+								{
+									Name:      "sysfs",
+									MountPath: "/sys",
+								},
+								{
+									Name:      "devfs",
+									MountPath: "/dev",
+								},
+								{
+									Name:      "run-udev-data-dir",
+									MountPath: "/run/udev/data",
+								},
+								{
+									Name:      "direct-csi-common-root",
+									MountPath: "/var/lib/direct-csi/",
 								},
 							},
 						},
