@@ -343,6 +343,10 @@ func (r *DeployerReconciler) doFinalizerOperationsForDeployer(cr *cachev1alpha1.
 func (r *DeployerReconciler) daemonSetForDeployer(
 	memcached *cachev1alpha1.Deployer) (*appsv1.DaemonSet, error) {
 	ls := labelsForMemcached(memcached.Name)
+	controllerImage, err := imageForDeployer()
+	if err != nil {
+		return nil, err
+	}
 	var daemonset = &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "node-server",
@@ -358,6 +362,54 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 				},
 				Spec: corev1.PodSpec{
 					SecurityContext: &corev1.PodSecurityContext{},
+					Containers: []corev1.Container{
+						{
+							Image:           controllerImage,
+							Name:            "controller",
+							ImagePullPolicy: corev1.PullIfNotPresent,
+							SecurityContext: &corev1.SecurityContext{
+								Privileged: &[]bool{true}[0],
+							},
+							Ports: []corev1.ContainerPort{{
+								ContainerPort: 30443,
+								Name:          "readinessport",
+							},
+								{
+									ContainerPort: 9898,
+									Name:          "healthz",
+								},
+							},
+							Args: []string{
+								"controller",
+								"--identity=directpv-min-io",
+								"-v=3",
+								"--csi-endpoint=$(CSI_ENDPOINT)",
+								"--kube-node-name=$(KUBE_NODE_NAME)",
+								"--readiness-port=30443",
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "CSI_ENDPOINT",
+									Value: "unix:///csi/csi.sock",
+								},
+								{
+									Name: "KUBE_NODE_NAME",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											APIVersion: "v1",
+											FieldPath:  "spec.nodeName",
+										},
+									},
+								},
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "socket-dir",
+									MountPath: "/csi",
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -376,7 +428,13 @@ func (r *DeployerReconciler) deploymentForDeployer(
 
 	// Get the images
 	controllerImage, err := imageForDeployer()
+	if err != nil {
+		return nil, err
+	}
 	resizerImage, err := imageForResizer()
+	if err != nil {
+		return nil, err
+	}
 	provisionerImage, err := imageForProvisioner()
 	if err != nil {
 		return nil, err
