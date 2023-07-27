@@ -684,43 +684,14 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 							SecurityContext: &corev1.SecurityContext{
 								Privileged: &[]bool{true}[0],
 							},
-							Ports: []corev1.ContainerPort{{
-								ContainerPort: 30443,
-								Name:          "readinessport",
-							},
-								{
-									ContainerPort: 9898,
-									Name:          "healthz",
-								},
-							},
 							Args: []string{
-								"--v=3",
-								"--csi-address=unix:///csi/csi.sock",
-								"--kubelet-registration-path=/var/lib/kubelet/plugins/directpv-min-io/csi.sock",
-							},
-							Env: []corev1.EnvVar{
-								{
-									Name:  "CSI_ENDPOINT",
-									Value: "unix:///csi/csi.sock",
-								},
-								{
-									Name: "KUBE_NODE_NAME",
-									ValueFrom: &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											APIVersion: "v1",
-											FieldPath:  "spec.nodeName",
-										},
-									},
-								},
+								"--csi-address=/csi/csi.sock",
+								"--health-port=9898",
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{
 									Name:      "socket-dir",
 									MountPath: "/csi",
-								},
-								{
-									Name:      "registration-dir",
-									MountPath: "/registration",
 								},
 							},
 						},
