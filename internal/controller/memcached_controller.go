@@ -493,6 +493,20 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 								SuccessThreshold:    1,
 								FailureThreshold:    5,
 							},
+							ReadinessProbe: &corev1.Probe{
+								ProbeHandler: corev1.ProbeHandler{
+									HTTPGet: &corev1.HTTPGetAction{
+										Path:   "/ready",
+										Port:   intstr.FromString("readinessport"),
+										Scheme: "HTTP",
+									},
+								},
+								InitialDelaySeconds: 60,
+								TimeoutSeconds:      10,
+								PeriodSeconds:       10,
+								SuccessThreshold:    1,
+								FailureThreshold:    5,
+							},
 							Args: []string{
 								"node-server",
 								"-v=3",
