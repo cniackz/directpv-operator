@@ -591,28 +591,12 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 							SecurityContext: &corev1.SecurityContext{
 								Privileged: &[]bool{true}[0],
 							},
-							Ports: []corev1.ContainerPort{{
-								ContainerPort: 30443,
-								Name:          "readinessport",
-							},
-								{
-									ContainerPort: 9898,
-									Name:          "healthz",
-								},
-							},
 							Args: []string{
-								"controller",
-								"--identity=directpv-min-io",
+								"node-controller",
 								"-v=3",
-								"--csi-endpoint=$(CSI_ENDPOINT)",
 								"--kube-node-name=$(KUBE_NODE_NAME)",
-								"--readiness-port=30443",
 							},
 							Env: []corev1.EnvVar{
-								{
-									Name:  "CSI_ENDPOINT",
-									Value: "unix:///csi/csi.sock",
-								},
 								{
 									Name: "KUBE_NODE_NAME",
 									ValueFrom: &corev1.EnvVarSource{
@@ -627,6 +611,34 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 								{
 									Name:      "socket-dir",
 									MountPath: "/csi",
+								},
+								{
+									Name:      "mountpoint-dir",
+									MountPath: "/var/lib/kubelet/pods",
+								},
+								{
+									Name:      "plugins-dir",
+									MountPath: "/var/lib/kubelet/plugins",
+								},
+								{
+									Name:      "directpv-common-root",
+									MountPath: "/var/lib/directpv/",
+								},
+								{
+									Name:      "sysfs",
+									MountPath: "/sys",
+								},
+								{
+									Name:      "devfs",
+									MountPath: "/dev",
+								},
+								{
+									Name:      "run-udev-data-dir",
+									MountPath: "/run/udev/data",
+								},
+								{
+									Name:      "direct-csi-common-root",
+									MountPath: "/var/lib/direct-csi/",
 								},
 							},
 						},
