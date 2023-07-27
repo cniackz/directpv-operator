@@ -93,6 +93,7 @@ func (r *DeployerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	// The purpose is check if the Custom Resource for the Kind Deployer
 	// is applied on the cluster if not we return nil to stop the reconciliation
 	deployer := &cachev1alpha1.Deployer{}
+	deployer.Namespace = "directpv"
 	err := r.Get(ctx, req.NamespacedName, deployer)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -200,7 +201,7 @@ func (r *DeployerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	// Check if the daemonset already exists, if not create a new one
 	foundDaemonSet := &appsv1.DaemonSet{}
-	err = r.Get(ctx, types.NamespacedName{Name: deployer.Name, Namespace: deployer.Namespace}, foundDaemonSet)
+	err = r.Get(ctx, types.NamespacedName{Name: deployer.Name, Namespace: "directpv"}, foundDaemonSet)
 	if err != nil && apierrors.IsNotFound(err) {
 		// Define a new DaemonSet
 		daemonSet, err := r.daemonSetForDeployer(deployer)
@@ -235,7 +236,7 @@ func (r *DeployerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	// Check if the deployment already exists, if not create a new one
 	foundDeployment := &appsv1.Deployment{}
-	err = r.Get(ctx, types.NamespacedName{Name: deployer.Name, Namespace: deployer.Namespace}, foundDeployment)
+	err = r.Get(ctx, types.NamespacedName{Name: deployer.Name, Namespace: "directpv"}, foundDeployment)
 	if err != nil && apierrors.IsNotFound(err) {
 		// Define a new deployment
 		dep, err := r.deploymentForDeployer(deployer)
