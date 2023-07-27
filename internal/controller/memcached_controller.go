@@ -198,41 +198,6 @@ func (r *DeployerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, nil
 	}
 
-	// Check if the namespace already exists, if not create a new one
-	foundNameSpace := &corev1.Namespace{}
-	err = r.Get(ctx, types.NamespacedName{Name: deployer.Name, Namespace: deployer.Namespace}, foundNameSpace)
-	if err != nil && apierrors.IsNotFound(err) {
-		// Define a new NameSpace
-		namespace, err := r.nameSpaceForDeployer(deployer)
-		if err != nil {
-			log.Error(err, "Failed to define new NameSpace resource for Deployer")
-
-			// The following implementation will update the status
-			meta.SetStatusCondition(&deployer.Status.Conditions, metav1.Condition{Type: typeAvailableDeployer,
-				Status: metav1.ConditionFalse, Reason: "Reconciling",
-				Message: fmt.Sprintf("Failed to create NameSpace for the custom resource (%s): (%s)", deployer.Name, err)})
-
-			if err := r.Status().Update(ctx, deployer); err != nil {
-				log.Error(err, "Failed to update Deployer status")
-				return ctrl.Result{}, err
-			}
-
-			return ctrl.Result{}, err
-		}
-		log.Info("Creating a new NameSpace...",
-			"NamesSpace.Namespace", namespace.Namespace, "NameSpace.Name", namespace.Name)
-		if err = r.Create(ctx, namespace); err != nil {
-			log.Error(err, "Failed to create new NameSpace",
-				"NameSpace.Namespace", namespace.Namespace, "NameSpace.Name", namespace.Name)
-			return ctrl.Result{}, err
-		}
-		// NameSpace created successfully
-	} else if err != nil {
-		log.Error(err, "Failed to get Namespace")
-		// Let's return the error for the reconciliation be re-trigged again
-		return ctrl.Result{}, err
-	}
-
 	// Check if the daemonset already exists, if not create a new one
 	foundDaemonSet := &appsv1.DaemonSet{}
 	err = r.Get(ctx, types.NamespacedName{Name: deployer.Name, Namespace: deployer.Namespace}, foundDaemonSet)
