@@ -8,9 +8,19 @@ metadata:
   name: celis
 rules:
 - apiGroups:
+  - "directpv.min.io"
+  resources:
+  - directpvdrives
+  - directpvvolumes
+  verbs:
+  - list
+  - get
+  - create
+- apiGroups:
   - ""
   resources:
   - namespaces
   verbs:
   - list
   - create
+  - get

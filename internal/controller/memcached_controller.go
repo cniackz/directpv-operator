@@ -372,6 +372,10 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 	if err != nil {
 		return nil, err
 	}
+	livenessProbeImage, err := imageForLivenessProbe()
+	if err != nil {
+		return nil, err
+	}
 	hostPathTypeToBeUsed := corev1.HostPathDirectoryOrCreate
 	healthZContainerPortName := "healthz"
 	var daemonset = &appsv1.DaemonSet{
@@ -673,6 +677,53 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 								},
 							},
 						},
+						{
+							Image:           livenessProbeImage,
+							Name:            "liveness-probe",
+							ImagePullPolicy: corev1.PullIfNotPresent,
+							SecurityContext: &corev1.SecurityContext{
+								Privileged: &[]bool{true}[0],
+							},
+							Ports: []corev1.ContainerPort{{
+								ContainerPort: 30443,
+								Name:          "readinessport",
+							},
+								{
+									ContainerPort: 9898,
+									Name:          "healthz",
+								},
+							},
+							Args: []string{
+								"--v=3",
+								"--csi-address=unix:///csi/csi.sock",
+								"--kubelet-registration-path=/var/lib/kubelet/plugins/directpv-min-io/csi.sock",
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "CSI_ENDPOINT",
+									Value: "unix:///csi/csi.sock",
+								},
+								{
+									Name: "KUBE_NODE_NAME",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											APIVersion: "v1",
+											FieldPath:  "spec.nodeName",
+										},
+									},
+								},
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "socket-dir",
+									MountPath: "/csi",
+								},
+								{
+									Name:      "registration-dir",
+									MountPath: "/registration",
+								},
+							},
+						},
 					},
 				},
 			},
@@ -899,6 +950,16 @@ func imageForProvisioner() (string, error) {
 // imageForRegistrar gets the provisioner image
 func imageForRegistrar() (string, error) {
 	var imageEnvVar = "CSI_NODE_DRIVER_REGISTRAR"
+	image, found := os.LookupEnv(imageEnvVar)
+	if !found {
+		return "", fmt.Errorf("Unable to find #{imageEnvVar} environment variable with the image")
+	}
+	return image, nil
+}
+
+// imageForLivenessProbe gets the liveness probe image
+func imageForLivenessProbe() (string, error) {
+	var imageEnvVar = "LIVENESS_PROBE"
 	image, found := os.LookupEnv(imageEnvVar)
 	if !found {
 		return "", fmt.Errorf("Unable to find #{imageEnvVar} environment variable with the image")
