@@ -3,6 +3,10 @@
 # It should be run by config/default
 resources:
 - bases/cache.example.com_deployers.yaml
+- bases/directpvdrives.yaml
+- bases/directpvvolumes.yaml
+- bases/directpvnodes.yaml
+- bases/directpvinitrequests.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:

@@ -4,7 +4,7 @@ metadata:
   annotations:
     alm-examples: '[]'
     capabilities: Basic Install
-    createdAt: "2023-07-27T15:25:36Z"
+    createdAt: "2023-07-27T16:18:33Z"
     operators.operatorframework.io/builder: operator-sdk-v1.29.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v4-alpha
   name: directpv-operator.v0.0.1
@@ -30,6 +30,18 @@ spec:
         displayName: Conditions
         path: conditions
       version: v1alpha1
+    - kind: DirectPVDrive
+      name: directpvdrives.directpv.min.io
+      version: v1beta1
+    - kind: DirectPVInitRequest
+      name: directpvinitrequests.directpv.min.io
+      version: v1beta1
+    - kind: DirectPVNode
+      name: directpvnodes.directpv.min.io
+      version: v1beta1
+    - kind: DirectPVVolume
+      name: directpvvolumes.directpv.min.io
+      version: v1beta1
   description: dp
   displayName: dp
   icon:
