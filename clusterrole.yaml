@@ -14,6 +14,7 @@ rules:
   - directpvvolumes
   - directpvnodes
   - directpvinitrequests
+  - events
   verbs:
   - list
   - get
@@ -23,6 +24,7 @@ rules:
   - ""
   resources:
   - namespaces
+  - events
   verbs:
   - list
   - create
