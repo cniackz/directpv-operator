@@ -17,6 +17,7 @@ rules:
   - list
   - get
   - create
+  - update
 - apiGroups:
   - ""
   resources:
@@ -25,3 +26,4 @@ rules:
   - list
   - create
   - get
+  - update
