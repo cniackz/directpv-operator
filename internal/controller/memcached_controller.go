@@ -566,7 +566,8 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 							Args: []string{
 								"node-server",
 								"-v=3",
-								"--identity=directpv-min-io --csi-endpoint=$(CSI_ENDPOINT)",
+								"--identity=directpv-min-io",
+								"--csi-endpoint=$(CSI_ENDPOINT)",
 								"--kube-node-name=$(KUBE_NODE_NAME)",
 								"--readiness-port=30443",
 								"--metrics-port=10443",
