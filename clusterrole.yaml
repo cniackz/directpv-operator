@@ -20,6 +20,7 @@ rules:
   - get
   - create
   - update
+  - watch
 - apiGroups:
   - ""
   resources:
@@ -30,3 +31,4 @@ rules:
   - create
   - get
   - update
+  - watch
