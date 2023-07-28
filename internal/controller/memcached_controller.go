@@ -784,85 +784,96 @@ func (r *DeployerReconciler) deploymentForDeployer(
 							},
 						},
 					},
-					Containers: []corev1.Container{{
-						Image:           controllerImage,
-						Name:            "controller",
-						ImagePullPolicy: corev1.PullIfNotPresent,
-						SecurityContext: &corev1.SecurityContext{
-							Privileged: &[]bool{true}[0],
-						},
-						Ports: []corev1.ContainerPort{{
-							ContainerPort: 30443,
-							Name:          "readinessport",
-						},
-							{
-								ContainerPort: 9898,
-								Name:          "healthz",
+					Containers: []corev1.Container{
+						{
+							Image: provisionerImage,
+							Name:  "csi-provisioner",
+							Args: []string{
+								"--v=3",
+								"--timeout=300s",
+								"--csi-address=$(CSI_ENDPOINT)",
+								"--leader-election",
+								"--feature-gates=Topology=true",
+								"--strict-topology",
 							},
-						},
-						//Command: []string{"/bin/bash", "-c", "--"},
-						Args: []string{"controller", "--identity=directpv-min-io", "-v=3", "--csi-endpoint=$(CSI_ENDPOINT)", "--kube-node-name=$(KUBE_NODE_NAME)", "--readiness-port=30443"},
-						Env: []corev1.EnvVar{
-							{
-								Name:  "CSI_ENDPOINT",
-								Value: "unix:///csi/csi.sock",
+							Env: []corev1.EnvVar{
+								{
+									Name:  "CSI_ENDPOINT",
+									Value: "unix:///csi/csi.sock",
+								},
 							},
-							{
-								Name: "KUBE_NODE_NAME",
-								ValueFrom: &corev1.EnvVarSource{
-									FieldRef: &corev1.ObjectFieldSelector{
-										APIVersion: "v1",
-										FieldPath:  "spec.nodeName",
-									},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "socket-dir",
+									MountPath: "/csi",
 								},
 							},
 						},
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								Name:      "socket-dir",
-								MountPath: "/csi",
+						{
+							Image:           controllerImage,
+							Name:            "controller",
+							ImagePullPolicy: corev1.PullIfNotPresent,
+							SecurityContext: &corev1.SecurityContext{
+								Privileged: &[]bool{true}[0],
+							},
+							Ports: []corev1.ContainerPort{
+								{
+									ContainerPort: 30443,
+									Name:          "readinessport",
+								},
+								{
+									ContainerPort: 9898,
+									Name:          "healthz",
+								},
+							},
+							Args: []string{
+								"controller",
+								"--identity=directpv-min-io",
+								"-v=3",
+								"--csi-endpoint=$(CSI_ENDPOINT)",
+								"--kube-node-name=$(KUBE_NODE_NAME)",
+								"--readiness-port=30443",
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "CSI_ENDPOINT",
+									Value: "unix:///csi/csi.sock",
+								},
+								{
+									Name: "KUBE_NODE_NAME",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											APIVersion: "v1",
+											FieldPath:  "spec.nodeName",
+										},
+									},
+								},
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "socket-dir",
+									MountPath: "/csi",
+								},
 							},
 						},
-					}, {
-						Image: resizerImage,
-						Name:  "csi-resizer",
-						Args:  []string{"--v=3", "--timeout=300s", "--csi-address=$(CSI_ENDPOINT)", "--leader-election"},
-						Env: []corev1.EnvVar{
-							{
-								Name:  "CSI_ENDPOINT",
-								Value: "unix:///csi/csi.sock",
+						{
+							Image: resizerImage,
+							Name:  "csi-resizer",
+							Args:  []string{"--v=3", "--timeout=300s", "--csi-address=$(CSI_ENDPOINT)", "--leader-election"},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "CSI_ENDPOINT",
+									Value: "unix:///csi/csi.sock",
+								},
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "socket-dir",
+									MountPath: "/csi",
+								},
 							},
 						},
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								Name:      "socket-dir",
-								MountPath: "/csi",
-							},
-						},
-					}, {
-						Image: provisionerImage,
-						Name:  "csi-provisioner",
-						Args: []string{
-							"--v=3",
-							"--timeout=300s",
-							"--csi-address=$(CSI_ENDPOINT)",
-							"--leader-election",
-							"--feature-gates=Topology=true",
-							"--strict-topology",
-						},
-						Env: []corev1.EnvVar{
-							{
-								Name:  "CSI_ENDPOINT",
-								Value: "unix:///csi/csi.sock",
-							},
-						},
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								Name:      "socket-dir",
-								MountPath: "/csi",
-							},
-						},
-					}},
+					},
 				},
 			},
 		},
