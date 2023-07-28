@@ -13,6 +13,7 @@ rules:
   - directpvdrives
   - directpvvolumes
   - directpvnodes
+  - directpvinitrequests
   verbs:
   - list
   - get
