@@ -378,6 +378,7 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 	}
 	hostPathTypeToBeUsed := corev1.HostPathDirectoryOrCreate
 	healthZContainerPortName := "healthz"
+	mountPropagationMode := corev1.MountPropagationMode(0)
 	var daemonset = &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "node-server",
@@ -502,12 +503,14 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{
-									Name:      "socket-dir",
-									MountPath: "/csi",
+									Name:             "socket-dir",
+									MountPath:        "/csi",
+									MountPropagation: &mountPropagationMode,
 								},
 								{
-									Name:      "registration-dir",
-									MountPath: "/registration",
+									Name:             "registration-dir",
+									MountPath:        "/registration",
+									MountPropagation: &mountPropagationMode,
 								},
 							},
 						},
