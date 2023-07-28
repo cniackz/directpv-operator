@@ -478,6 +478,40 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 					},
 					Containers: []corev1.Container{
 						{
+							Image:           registrarImage,
+							Name:            "node-driver-registrar",
+							ImagePullPolicy: corev1.PullIfNotPresent,
+							SecurityContext: &corev1.SecurityContext{
+								Privileged: &[]bool{true}[0],
+							},
+							Args: []string{
+								"--v=3",
+								"--csi-address=unix:///csi/csi.sock",
+								"--kubelet-registration-path=/var/lib/kubelet/plugins/directpv-min-io/csi.sock",
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name: "KUBE_NODE_NAME",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											APIVersion: "v1",
+											FieldPath:  "spec.nodeName",
+										},
+									},
+								},
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "socket-dir",
+									MountPath: "/csi",
+								},
+								{
+									Name:      "registration-dir",
+									MountPath: "/registration",
+								},
+							},
+						},
+						{
 							Image:           controllerImage,
 							Name:            "node-server",
 							ImagePullPolicy: corev1.PullIfNotPresent,
@@ -639,49 +673,6 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 								{
 									Name:      "direct-csi-common-root",
 									MountPath: "/var/lib/direct-csi/",
-								},
-							},
-						},
-						{
-							Image:           registrarImage,
-							Name:            "node-driver-registrar",
-							ImagePullPolicy: corev1.PullIfNotPresent,
-							SecurityContext: &corev1.SecurityContext{
-								Privileged: &[]bool{true}[0],
-							},
-							Ports: []corev1.ContainerPort{{
-								ContainerPort: 30443,
-								Name:          "readinessport",
-							},
-								{
-									ContainerPort: 9898,
-									Name:          "healthz",
-								},
-							},
-							Args: []string{
-								"--v=3",
-								"--csi-address=unix:///csi/csi.sock",
-								"--kubelet-registration-path=/var/lib/kubelet/plugins/directpv-min-io/csi.sock",
-							},
-							Env: []corev1.EnvVar{
-								{
-									Name: "KUBE_NODE_NAME",
-									ValueFrom: &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											APIVersion: "v1",
-											FieldPath:  "spec.nodeName",
-										},
-									},
-								},
-							},
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name:      "socket-dir",
-									MountPath: "/csi",
-								},
-								{
-									Name:      "registration-dir",
-									MountPath: "/registration",
 								},
 							},
 						},
