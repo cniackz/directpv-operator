@@ -9,12 +9,14 @@ metadata:
 rules:
 - apiGroups:
   - "directpv.min.io"
+  - "coordination.k8s.io"
   resources:
   - directpvdrives
   - directpvvolumes
   - directpvnodes
   - directpvinitrequests
   - events
+  - leases
   verbs:
   - list
   - get
