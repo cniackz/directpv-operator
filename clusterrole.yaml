@@ -12,6 +12,7 @@ rules:
   resources:
   - directpvdrives
   - directpvvolumes
+  - directpvnodes
   verbs:
   - list
   - get
