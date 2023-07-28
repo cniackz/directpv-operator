@@ -665,10 +665,6 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 							},
 							Env: []corev1.EnvVar{
 								{
-									Name:  "CSI_ENDPOINT",
-									Value: "unix:///csi/csi.sock",
-								},
-								{
 									Name: "KUBE_NODE_NAME",
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
