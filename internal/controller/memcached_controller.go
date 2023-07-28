@@ -378,7 +378,7 @@ func (r *DeployerReconciler) daemonSetForDeployer(
 	}
 	hostPathTypeToBeUsed := corev1.HostPathDirectoryOrCreate
 	healthZContainerPortName := "healthz"
-	mountPropagationMode := corev1.MountPropagationMode(0)
+	mountPropagationMode := corev1.MountPropagationNone
 	var daemonset = &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "node-server",
